@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git Forest</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0a0a0a;
+    --surface: #111111;
+    --surf2:   #181818;
+    --surf3:   #1e1e1e;
+    --border:  #222222;
+    --bord2:   #2e2e2e;
+    --text:    #e8e8e8;
+    --muted:   #444444;
+    --muted2:  #888888;
+    --g0:      #111111;
+    --g1:      #0d3b22;
+    --g2:      #166534;
+    --g3:      #16a34a;
+    --g4:      #22c55e;
+    --accent:  #22c55e;
+    --r:       5px;
+    --rlg:     9px;
+  }
+
+  html { height: 100%; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100%;
+    padding: 1.25rem 1.5rem 2rem;
+  }
+
+  .app {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo { display: flex; align-items: center; gap: 8px; }
+
+  .logo-icon {
+    width: 26px; height: 26px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-icon svg { width: 15px; height: 15px; fill: #0a0a0a; }
+
+  h1 {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--rlg);
+    padding: 1rem 1.125rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .card-title {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.875rem;
+    display: block;
+  }
+
+  /* ── Tooltips ── */
+  .tip-icon {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 1px solid var(--bord2);
+    color: var(--muted2);
+    font-size: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    flex-shrink: 0;
+    line-height: 1;
+    user-select: none;
+    vertical-align: middle;
+    margin-left: 4px;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .tip-icon:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  #tooltip {
+    position: fixed;
+    z-index: 9999;
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    border-radius: 7px;
+    padding: 0.55rem 0.75rem;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    color: #b0b0b0;
+    line-height: 1.55;
+    max-width: 260px;
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  #tooltip.visible { opacity: 1; }
+
+  #tooltip::before {
+    content: '';
+    position: absolute;
+    border: 5px solid transparent;
+  }
+
+  #tooltip.arrow-down::before {
+    top: 100%;
+    left: var(--arrow-x, 16px);
+    border-top-color: #3a3a3a;
+  }
+
+  #tooltip.arrow-up::before {
+    bottom: 100%;
+    left: var(--arrow-x, 16px);
+    border-bottom-color: #3a3a3a;
+  }
+
+
+  .config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.25rem;
+  }
+
+  /* ── Intensity + Options side by side ── */
+  .mid-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    align-items: stretch;
+  }
+
+  /* ── Fields ── */
+  .field { display: flex; flex-direction: column; gap: 0.25rem; }
+
+  label {
+    font-size: 11px;
+    color: var(--muted2);
+  }
+
+  input[type="text"], input[type="date"] {
+    width: 100%;
+    background: var(--surf2);
+    border: 1px solid var(--bord2);
+    border-radius: var(--r);
+    padding: 0.4rem 0.625rem;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type="text"]:focus, input[type="date"]:focus { border-color: var(--accent); }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.4); cursor: pointer; }
+
+  /* ── Intensity ── */
+  .intensity-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+
+  .intensity-btn {
+    background: var(--surf2);
+    border: 1px solid var(--bord2);
+    border-radius: var(--r);
+    padding: 0;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 52px;
+  }
+
+  .intensity-btn:hover { background: var(--surf3); }
+  .intensity-btn.active { border-color: var(--accent); background: rgba(34,197,94,0.06); }
+
+  .intensity-dots { display: flex; justify-content: center; gap: 2px; }
+  .dot { width: 7px; height: 7px; border-radius: 2px; }
+
+  .intensity-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+  }
+
+  /* ── Options toggles ── */
+  .options-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--rlg);
+    padding: 1rem 1.125rem;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid var(--border);
+    gap: 1rem;
+  }
+
+  .toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .toggle-row:first-child { padding-top: 0; }
+
+  .toggle-info strong { font-size: 12px; font-weight: 500; color: var(--text); display: block; }
+  .toggle-info span { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  .toggle { position: relative; width: 32px; height: 18px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute; inset: 0;
+    background: var(--bord2);
+    border-radius: 18px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    left: 3px; top: 3px;
+    background: #555;
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+  }
+
+  .toggle input:checked + .toggle-slider { background: rgba(34,197,94,0.2); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(14px); background: var(--accent); }
+
+  /* ── Graph card ── */
+  .graph-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--rlg);
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+  }
+
+  .graph-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.125rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .graph-body-wrap {
+    padding: 0.875rem 1.125rem;
+  }
+
+  /* day labels sit outside the scroll zone */
+  .graph-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .day-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+    padding-top: 14px; /* offset for month label row height */
+    margin-right: 4px;
+  }
+
+  .day-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    height: 10px;
+    line-height: 10px;
+    width: 20px;
+  }
+
+  /* only this div scrolls */
+  .graph-scroll {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    min-width: 0;
+  }
+
+  .graph-scroll::-webkit-scrollbar { height: 3px; }
+  .graph-scroll::-webkit-scrollbar-track { background: var(--surf2); border-radius: 2px; }
+  .graph-scroll::-webkit-scrollbar-thumb { background: var(--bord2); border-radius: 2px; }
+  .graph-scroll::-webkit-scrollbar-thumb:hover { background: var(--muted2); }
+
+  .graph-scroll-inner {
+    display: inline-flex;
+    flex-direction: column;
+    padding-bottom: 4px;
+  }
+
+  .month-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 3px;
+    height: 12px;
+  }
+
+  .month-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    width: 12px; /* 10px cell + 2px gap */
+    overflow: visible;
+    white-space: nowrap;
+  }
+
+  .graph-weeks { display: flex; gap: 2px; }
+  .week-col { display: flex; flex-direction: column; gap: 2px; }
+
+  .graph-cell {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    background: var(--g0);
+    border: 1px solid rgba(255,255,255,0.03);
+    flex-shrink: 0;
+  }
+
+  .graph-cell.l1 { background: var(--g1); }
+  .graph-cell.l2 { background: var(--g2); }
+  .graph-cell.l3 { background: var(--g3); }
+  .graph-cell.l4 { background: var(--g4); }
+
+  /* ── Stats ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.875rem;
+  }
+
+  .stat {
+    background: var(--surf2);
+    border-radius: var(--r);
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  .stat-label { font-size: 11px; color: var(--muted2); }
+
+  /* ── Copy button ── */
+  .copy-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: 1px solid var(--bord2);
+    border-radius: var(--r);
+    padding: 0.3rem 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted2);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .copy-btn.copied { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Generate button ── */
+  .generate-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    border-radius: var(--r);
+    padding: 0.65rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .generate-btn:hover { opacity: 0.85; }
+  .generate-btn:active { opacity: 0.7; }
+
+  /* ── Output card ── */
+  .output-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--rlg);
+    overflow: hidden;
+    display: none;
+    margin-bottom: 0.75rem;
+  }
+
+  .output-card.visible { display: block; }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 1.125rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .output-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted2);
+  }
+
+  pre {
+    padding: 1rem 1.125rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--muted2);
+    overflow: auto;
+    white-space: pre;
+    max-height: 260px;
+    user-select: all;
+    cursor: text;
+  }
+
+  pre::-webkit-scrollbar { width: 3px; height: 3px; }
+  pre::-webkit-scrollbar-track { background: transparent; }
+  pre::-webkit-scrollbar-thumb { background: var(--bord2); border-radius: 2px; }
+
+  /* ── Steps ── */
+  .steps-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--rlg);
+    padding: 1rem 1.125rem;
+    display: none;
+    margin-bottom: 0.75rem;
+  }
+
+  .steps-card.visible { display: block; }
+
+  .step {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+
+  .step:last-child { border-bottom: none; padding-bottom: 0; }
+  .step:first-child { padding-top: 0; }
+
+  .step-num {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1px solid var(--bord2);
+    color: var(--muted2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step-text { font-size: 12px; line-height: 1.55; color: var(--muted2); }
+
+  .step-text code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surf2);
+    border: 1px solid var(--bord2);
+    border-radius: 3px;
+    padding: 0 4px;
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  .step-text strong { color: var(--text); font-weight: 500; }
+
+  /* ── Footer ── */
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.875rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted2);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .footer-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+      </div>
+      <h1>Git Forest</h1>
+    </div>
+    <p class="subtitle">// grow your contribution forest, one commit at a time</p>
+  </header>
+
+  <!-- Config -->
+  <div class="card">
+    <span class="card-title">Configuration</span>
+    <div class="config-grid">
+      <div class="field">
+        <label>Repo path <span class="tip-icon" data-tip="The folder on your PC where your GitHub repo is cloned. Example: C:/Users/yourname/my-repo — this is where git commands will run.">?</span></label>
+        <input type="text" id="repoPath" value="C:/Users/kotes/commits" />
+      </div>
+      <div class="field">
+        <label>GitHub email <span class="tip-icon" data-tip="The email linked to your GitHub account. Must match exactly — go to github.com → Settings → Emails to find yours.">?</span></label>
+        <input type="text" id="email" value="koteswar0811200@gmail.com" />
+      </div>
+      <div class="field">
+        <label>Start date <span class="tip-icon" data-tip="The first day to start adding commits. Green squares will appear from this date forward on your GitHub graph.">?</span></label>
+        <input type="date" id="startDate" />
+      </div>
+      <div class="field">
+        <label>End date <span class="tip-icon" data-tip="The last day to add commits. Pick any past date — GitHub only counts commits up to today.">?</span></label>
+        <input type="date" id="endDate" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Intensity + Options -->
+  <div class="mid-row">
+
+    <div class="card" style="margin-bottom:0; display:flex; flex-direction:column;">
+      <span class="card-title">Commit intensity <span class="tip-icon" data-tip="How green your graph looks. More intensity = darker squares. Each day gets a random number of commits up to this level.">?</span></span>
+      <div class="intensity-grid" style="flex:1;">
+        <button class="intensity-btn" data-level="light" onclick="setIntensity('light')">
+          <div class="intensity-dots">
+            <div class="dot" style="background:var(--g1)"></div>
+            <div class="dot" style="background:var(--g1)"></div>
+            <div class="dot" style="background:var(--g0)"></div>
+            <div class="dot" style="background:var(--g0)"></div>
+          </div>
+          <div class="intensity-label">light</div>
+        </button>
+        <button class="intensity-btn active" data-level="medium" onclick="setIntensity('medium')">
+          <div class="intensity-dots">
+            <div class="dot" style="background:var(--g2)"></div>
+            <div class="dot" style="background:var(--g2)"></div>
+            <div class="dot" style="background:var(--g1)"></div>
+            <div class="dot" style="background:var(--g0)"></div>
+          </div>
+          <div class="intensity-label">medium</div>
+        </button>
+        <button class="intensity-btn" data-level="heavy" onclick="setIntensity('heavy')">
+          <div class="intensity-dots">
+            <div class="dot" style="background:var(--g3)"></div>
+            <div class="dot" style="background:var(--g3)"></div>
+            <div class="dot" style="background:var(--g2)"></div>
+            <div class="dot" style="background:var(--g1)"></div>
+          </div>
+          <div class="intensity-label">heavy</div>
+        </button>
+        <button class="intensity-btn" data-level="max" onclick="setIntensity('max')">
+          <div class="intensity-dots">
+            <div class="dot" style="background:var(--g4)"></div>
+            <div class="dot" style="background:var(--g4)"></div>
+            <div class="dot" style="background:var(--g3)"></div>
+            <div class="dot" style="background:var(--g2)"></div>
+          </div>
+          <div class="intensity-label">max</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="options-card">
+      <span class="card-title">Options</span>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <strong>Skip weekends <span class="tip-icon" data-tip="When ON: no commits on Saturday or Sunday. Makes your graph look more like a real developer's activity.">?</span></strong>
+          <span>No Sat &amp; Sun</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="skipWeekends" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <strong>Random variation <span class="tip-icon" data-tip="When ON: each day gets a different random number of commits (1–5). Makes the graph look natural with mixed shades of green.">?</span></strong>
+          <span>Varied daily commits</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="randomVariation" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <strong>Force push <span class="tip-icon" data-tip="Overwrites the remote repo history with your backdated commits. Required for this to work — keep it ON unless you know what you're doing.">?</span></strong>
+          <span>Required for backdate</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="forcePush" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Graph preview -->
+  <div class="graph-card">
+    <div class="graph-header">
+      <span class="card-title" style="margin-bottom:0;">Graph preview <span class="tip-icon" data-tip="A live preview of what your GitHub graph will look like. Darker green = more commits. Scroll horizontally to see all dates.">?</span></span>
+    </div>
+    <div class="graph-body-wrap">
+      <div class="graph-layout">
+        <!-- day labels: fixed, never scroll -->
+        <div class="day-labels">
+          <div class="day-label"></div>
+          <div class="day-label">Mon</div>
+          <div class="day-label"></div>
+          <div class="day-label">Wed</div>
+          <div class="day-label"></div>
+          <div class="day-label">Fri</div>
+          <div class="day-label"></div>
+        </div>
+        <!-- only this scrolls horizontally -->
+        <div class="graph-scroll">
+          <div class="graph-scroll-inner">
+            <div class="month-row" id="monthRow"></div>
+            <div class="graph-weeks" id="graphWeeks"></div>
+          </div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-value" id="statDays">0</span>
+          <span class="stat-label">active days</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="statCommits">0</span>
+          <span class="stat-label">total commits</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="statWeeks">0</span>
+          <span class="stat-label">weeks</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate -->
+  <button class="generate-btn" onclick="generateScript()">
+    Generate Bash Script <span class="tip-icon" style="border-color:rgba(0,0,0,0.3); color:rgba(0,0,0,0.5);" data-tip="Generates a greenify.sh script using your settings above. Copy it, paste into Git Bash, and run it to fill your GitHub graph.">?</span>
+  </button>
+
+  <!-- Script output -->
+  <div class="output-card" id="outputCard">
+    <div class="output-header">
+      <span class="output-title">greenify.sh — ready to run</span>
+      <button class="copy-btn" id="copyBtn" onclick="copyScript()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy script
+      </button>
+    </div>
+    <pre id="scriptOutput"></pre>
+  </div>
+
+  <!-- How to run -->
+  <div class="steps-card" id="howToRun">
+    <span class="card-title">How to run</span>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Open <strong>Git Bash</strong> on your Windows PC</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">Navigate: <code id="cdCommand">cd /c/Users/kotes/commits</code></div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">Create the script: <code>nano greenify.sh</code> → paste → <code>Ctrl+X</code> → <code>Y</code> → <code>Enter</code></div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text">Make executable: <code>chmod +x greenify.sh</code></div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-text">Run: <code>./greenify.sh</code> — use your <strong>PAT token</strong> as password</div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-text">Go to <strong>github.com</strong> → your profile → select the year 🌲</div>
+    </div>
+  </div>
+
+  <footer>
+    <span class="footer-name">Koteswar Enamadni</span>
+    <span class="footer-sub">Git Forest · grow your contribution forest</span>
+  </footer>
+
+</div>
+
+<script>
+  let currentIntensity = 'medium';  let generatedScript = '';
+
+  const intensityConfig = {
+    light:  { max: 2 },
+    medium: { max: 3 },
+    heavy:  { max: 4 },
+    max:    { max: 5 }
+  };
+
+  function setIntensity(level) {
+    currentIntensity = level;
+    document.querySelectorAll('.intensity-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-level="' + level + '"]').classList.add('active');
+    updatePreview();
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const end = new Date();
+    const start = new Date();
+    start.setMonth(start.getMonth() - 6);
+    document.getElementById('startDate').value = start.toISOString().split('T')[0];
+    document.getElementById('endDate').value   = end.toISOString().split('T')[0];
+    updatePreview();
+    ['startDate','endDate','skipWeekends','randomVariation'].forEach(id => {
+      document.getElementById(id).addEventListener('change', updatePreview);
+    });
+  });
+
+  function updatePreview() {
+    const startVal = document.getElementById('startDate').value;
+    const endVal   = document.getElementById('endDate').value;
+    if (!startVal || !endVal) return;
+
+    const start = new Date(startVal + 'T00:00:00');
+    const end   = new Date(endVal   + 'T00:00:00');
+    if (end <= start) return;
+
+    const skipWeekends    = document.getElementById('skipWeekends').checked;
+    const randomVariation = document.getElementById('randomVariation').checked;
+    const maxCommits      = intensityConfig[currentIntensity].max;
+
+    const weeksEl = document.getElementById('graphWeeks');
+    const monthEl = document.getElementById('monthRow');
+    weeksEl.innerHTML = '';
+    monthEl.innerHTML = '';
+
+    let current = new Date(start);
+    current.setDate(current.getDate() - current.getDay());
+
+    let totalCommits = 0, activeDays = 0, weekCount = 0;
+    let lastMonth = -1;
+
+    while (current <= end) {
+      const col = document.createElement('div');
+      col.className = 'week-col';
+
+      const mlabel = document.createElement('div');
+      mlabel.className = 'month-label';
+      const mo = current.getMonth();
+      if (mo !== lastMonth && new Date(current) >= start) {
+        mlabel.textContent = current.toLocaleString('default', { month: 'short' });
+        lastMonth = mo;
+      }
+      monthEl.appendChild(mlabel);
+
+      for (let d = 0; d < 7; d++) {
+        const date    = new Date(current);
+        const inRange = date >= start && date <= end;
+        const isWkend = date.getDay() === 0 || date.getDay() === 6;
+        let commits   = 0;
+
+        if (inRange && !(skipWeekends && isWkend)) {
+          commits = randomVariation
+            ? Math.max(1, Math.ceil(Math.random() * maxCommits))
+            : maxCommits;
+          totalCommits += commits;
+          activeDays++;
+        }
+
+        const cell = document.createElement('div');
+        cell.className = 'graph-cell';
+        if (inRange && commits > 0) {
+          if      (commits >= maxCommits)        cell.classList.add('l4');
+          else if (commits >= maxCommits * 0.66) cell.classList.add('l3');
+          else if (commits >= maxCommits * 0.33) cell.classList.add('l2');
+          else                                   cell.classList.add('l1');
+        }
+        col.appendChild(cell);
+        current.setDate(current.getDate() + 1);
+      }
+
+      weeksEl.appendChild(col);
+      weekCount++;
+    }
+
+    document.getElementById('statDays').textContent    = activeDays;
+    document.getElementById('statCommits').textContent = totalCommits.toLocaleString();
+    document.getElementById('statWeeks').textContent   = weekCount;
+  }
+
+  function generateScript() {
+    const repoPath     = document.getElementById('repoPath').value.trim();
+    const email        = document.getElementById('email').value.trim();
+    const startDate    = document.getElementById('startDate').value;
+    const endDate      = document.getElementById('endDate').value;
+    const skipWeekends = document.getElementById('skipWeekends').checked;
+    const forcePush    = document.getElementById('forcePush').checked;
+
+    if (!startDate || !endDate) { alert('Please select start and end dates.'); return; }
+
+    const skipLine  = skipWeekends
+      ? '  day_of_week=$(date -d "@$current" +%u)\n  if [[ "$day_of_week" -eq 6 || "$day_of_week" -eq 7 ]]; then\n    current=$(( current + 86400 ))\n    continue\n  fi\n'
+      : '';
+    const cdLine    = repoPath ? 'cd "' + repoPath.replace(/\\/g, '/') + '"\n' : '';
+    const emailLine = email    ? 'git config user.email "' + email + '"\n'      : '';
+    const pushLine  = forcePush ? 'git push origin main --force' : 'git push origin main';
+
+    generatedScript =
+        '#!/bin/bash\n'
+      + '\n'
+      + '# ================================================\n'
+      + '#  Git Forest — backdated commit script\n'
+      + '#  Generated by Git Forest app\n'
+      + '# ================================================\n'
+      + '\n'
+      + 'START_DATE="' + startDate + '"\n'
+      + 'END_DATE="'   + endDate   + '"\n'
+      + 'SKIP_WEEKENDS=' + skipWeekends + '\n'
+      + '\n'
+      + cdLine + emailLine
+      + '\n'
+      + 'echo "Git Forest starting..."\n'
+      + 'echo "Range: $START_DATE to $END_DATE"\n'
+      + 'echo "──────────────────────────────────"\n'
+      + '\n'
+      + 'current=$(date -d "$START_DATE" +%s)\n'
+      + 'end=$(date -d "$END_DATE" +%s)\n'
+      + 'total_commits=0\n'
+      + 'total_days=0\n'
+      + '\n'
+      + 'while [[ "$current" -le "$end" ]]; do\n'
+      + '\n'
+      + '  date_str=$(date -d "@$current" +%Y-%m-%d)\n'
+      + skipLine
+      + '  num_commits=$(( (RANDOM % 5) + 1 ))\n'
+      + '\n'
+      + '  for (( i=1; i<=num_commits; i++ )); do\n'
+      + '    export GIT_AUTHOR_DATE="${date_str}T10:$(printf \'%02d\' $i):00"\n'
+      + '    export GIT_COMMITTER_DATE="${date_str}T10:$(printf \'%02d\' $i):00"\n'
+      + '    echo "activity $date_str [$i]" >> activity.log\n'
+      + '    git add .\n'
+      + '    git commit -m "chore: activity $date_str [$i]" --quiet\n'
+      + '    total_commits=$(( total_commits + 1 ))\n'
+      + '  done\n'
+      + '\n'
+      + '  echo "  $date_str — $num_commits commit(s)"\n'
+      + '  total_days=$(( total_days + 1 ))\n'
+      + '  current=$(( current + 86400 ))\n'
+      + '\n'
+      + 'done\n'
+      + '\n'
+      + 'echo "──────────────────────────────────"\n'
+      + 'echo "Done! $total_commits commits over $total_days days"\n'
+      + 'echo "Pushing to GitHub..."\n'
+      + '\n'
+      + pushLine + '\n'
+      + '\n'
+      + 'echo "All done! Check your GitHub profile."\n';
+
+    document.getElementById('scriptOutput').textContent = generatedScript;
+    document.getElementById('outputCard').classList.add('visible');
+    document.getElementById('howToRun').classList.add('visible');
+
+    if (repoPath) {
+      const p = repoPath.replace(/\\/g, '/').replace(/^([A-Za-z]):/, '/c');
+      document.getElementById('cdCommand').textContent = 'cd ' + p;
+    }
+  }
+
+  function copyScript() {
+    if (!generatedScript) return;
+    const btn = document.getElementById('copyBtn');
+
+    const markCopied = () => {
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy script';
+        btn.classList.remove('copied');
+      }, 2000);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(generatedScript).then(markCopied).catch(fallback);
+    } else { fallback(); }
+
+    function fallback() {
+      const ta = document.createElement('textarea');
+      ta.value = generatedScript;
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); markCopied(); }
+      catch(e) { btn.textContent = 'Select & Ctrl+C to copy'; }
+      document.body.removeChild(ta);
+    }
+  }
+
+  // ── Tooltip engine ──
+  const tt = document.createElement('div');
+  tt.id = 'tooltip';
+  tt.style.cssText = 'position:fixed;z-index:9999;background:#1f1f1f;border:1px solid #3a3a3a;border-radius:7px;padding:8px 12px;font-size:12px;font-family:Inter,sans-serif;color:#c0c0c0;line-height:1.55;max-width:280px;pointer-events:none;box-shadow:0 8px 28px rgba(0,0,0,0.7);display:none;white-space:normal;word-break:break-word;';
+  document.body.appendChild(tt);
+
+  function showTip(icon) {
+    const text = icon.getAttribute('data-tip');
+    if (!text) return;
+
+    tt.textContent = text;
+    tt.style.display = 'block';
+
+    const r   = icon.getBoundingClientRect();
+    const tw  = tt.offsetWidth;
+    const th  = tt.offsetHeight;
+    const gap = 8;
+    const pad = 8;
+
+    // vertical — prefer above, fallback below
+    let top;
+    if (r.top - th - gap - pad > 0) {
+      top = r.top - th - gap;
+    } else {
+      top = r.bottom + gap;
+    }
+
+    // horizontal — left-align to icon, clamp to screen
+    let left = r.left;
+    if (left + tw + pad > window.innerWidth) left = window.innerWidth - tw - pad;
+    if (left < pad) left = pad;
+
+    tt.style.top  = top  + 'px';
+    tt.style.left = left + 'px';
+    tt.style.opacity = '1';
+  }
+
+  function hideTip() {
+    tt.style.opacity = '0';
+    setTimeout(() => { tt.style.display = 'none'; }, 120);
+  }
+
+  document.addEventListener('mouseover', e => {
+    const icon = e.target.closest('[data-tip]');
+    if (icon) showTip(icon);
+  });
+
+  document.addEventListener('mouseout', e => {
+    const icon = e.target.closest('[data-tip]');
+    if (icon) hideTip();
+  });
+</script>
+</body>
+</html>
